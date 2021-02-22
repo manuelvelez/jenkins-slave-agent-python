@@ -97,5 +97,13 @@ RUN set -ex; \
 		\) -exec rm -rf '{}' +; \
 	rm -f get-pip.py
 
+RUN apt-get update -qqy \
+	&& apt-get install -qy openssh-server \
+	&& mkdir -p /var/run/sshd
+
+RUN echo "jenkins:jenkins" | chpasswd
+
 WORKDIR /home/jenkins
-USER jenkins
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+
