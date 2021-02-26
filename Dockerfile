@@ -101,10 +101,6 @@ RUN apt-get update -qqy \
 	&& apt-get install -qy openssh-server \
 	&& mkdir -p /var/run/sshd
 
-RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.29.0/geckodriver-v0.29.0-linux64.tar.gz \
-	&& tar -zxvf geckodriver-v0.29.0-linux64.tar.gz \ 
-	&& mv geckodriver /usr/local/bin/  
-
 RUN echo "jenkins:jenkins" | chpasswd
 
 WORKDIR /home/jenkins
