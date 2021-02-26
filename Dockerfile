@@ -1,30 +1,36 @@
 FROM jenkinsci/slave
 
 ENV PYTHON_VERSIONS '3.9'
-ENV BUILD_REQUIREMENTS 'libssl-dev libffi-dev zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev libgdbm-dev libc6-dev libdb5.3-dev libbz2-dev libexpat1-dev liblzma-dev tk-dev autoconf automake bzip2 dpkg-dev file g++ gcc imagemagick libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev libjpeg-dev libkrb5-dev liblzma-dev libmagickcore-dev libmagickwand-dev libmaxminddb-dev libncurses5-dev libncursesw5-dev libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool libwebp-dev libxml2-dev libxslt-dev libyaml-dev make patch unzip xz-utils zlib1g-dev'
+ENV BUILD_REQUIREMENTS 'libssl-dev libffi-dev zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev \
+                        libgdbm-dev libc6-dev libdb5.3-dev libbz2-dev libexpat1-dev liblzma-dev tk-dev autoconf automake \
+                        bzip2 dpkg-dev file g++ gcc imagemagick libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev \
+                        libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev libjpeg-dev libkrb5-dev \
+                        liblzma-dev libmagickcore-dev libmagickwand-dev libmaxminddb-dev libncurses5-dev \
+                        libncursesw5-dev libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool \
+                        libwebp-dev libxml2-dev libxslt-dev libyaml-dev make patch unzip xz-utils zlib1g-dev'
+
+ENV PACKAGES_TO_INSTALL 'apt-utils gcc build-essential python python-pip python-virtualenv python3 python3-pip \
+                         python3-virtualenv jython pypy openssl curl libbluetooth-dev tk-dev uuid openssh-server'
 
 USER root
 
 WORKDIR /tmp/
 RUN apt-get update -qqy \
-  && apt-get -qqy install apt-utils ${BUILD_REQUIREMENTS} build-essential python python-pip python-virtualenv python3 python3-pip python3-virtualenv jython pypy openssl curl \
+  && apt-get -qqy install ${PACKAGES_TO_INSTALL} \
   && gcc -v \
   && chown -R root:root /home/jenkins \
-  && pip3 install --default-timeout=240 -U setuptools wheel > /dev/null \
-  && pip3 install --default-timeout=240 -U tox virtualenv pylint pipenv bumpversion twine > /dev/null \
+  && chown -R jenkins:jenkins /home/jenkins \
   && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /tmp/* \
-  && chown -R jenkins:jenkins /home/jenkins
+  && mkdir -p /var/run/sshd \
+  && echo "jenkins:jenkins" | chpasswd
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		libbluetooth-dev \
-		tk-dev \
-		uuid-dev \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apt-get update -qqy \
+  && apt-get -qqy install ${BUILD_REQUIREMENTS}
 
+RUN python3 --version && pip3 --version
 
 ENV GPG_KEY E3FF2839C048B25C084DEBE9B26995E310250568
-ENV PYTHON_VERSION 3.9.2
+ENV PYTHON_VERSION 3.9.0
 
 RUN set -ex \
 	\
@@ -97,13 +103,6 @@ RUN set -ex; \
 		\) -exec rm -rf '{}' +; \
 	rm -f get-pip.py
 
-RUN apt-get update -qqy \
-	&& apt-get install -qy openssh-server \
-	&& mkdir -p /var/run/sshd
-
-RUN echo "jenkins:jenkins" | chpasswd
-
 WORKDIR /home/jenkins
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
-
